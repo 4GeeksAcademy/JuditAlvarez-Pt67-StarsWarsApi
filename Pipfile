@@ -18,6 +18,8 @@ flask-cors = "*"
 gunicorn = "*"
 mysqlclient = "*"
 flask-admin = "*"
+flask-swagger-ui = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.10"

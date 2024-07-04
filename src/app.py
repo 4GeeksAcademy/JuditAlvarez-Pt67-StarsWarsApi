@@ -4,12 +4,12 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 import os
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
-from flask_swagger import swagger
+from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
-#from models import Person
+from models import db, User, People, Planets, Vehicles, FavouritesCharacters, FavouritesPlanets, FavouritesVehicles
+
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -39,7 +39,7 @@ def sitemap():
 @app.route('/people', methods=['GET'])
 def get_people():
     people = people.query.all()
-    people_list = [people.serialize() for person in people]
+    people_list = [person.serialize() for person in people]
 
     response_body = {
         "people" : people_list
@@ -51,11 +51,11 @@ def get_people():
 @app.route('/people/<int:people_id>', methods=['GET'])
 def get_people_by_id(people_id):
     person = person.query.filter_by(id=people_id).first()
-    people_serialize= people.serialize()
+    person_serialize= person.serialize()
 
     response_body= {
         "msg" : "the character is getting by id",
-        "data" : people_serialize
+        "data" : person_serialize
     }
 
     return jsonify(response_body), 200
@@ -65,7 +65,7 @@ def get_people_by_id(people_id):
 @app.route('/planets', methods=['GET'])
 def get_planets():
     planets = planets.query.all()
-    planets_list = [planet.serializa() for planet in planets]
+    planets_list = [planet.serialize() for planet in planets]
 
     response_body = {
         "msg": "All planets are getting "
@@ -112,7 +112,9 @@ def get_user_favorites(user_id):
 
     
     response_body = {
-        "favorite_characters": favorite_characters
+        "favorite_characters": favorite_characters,
+        "favorite_planets" : favorite_planets,
+        "favorite_vehicles": favorite_vehicles
     }
 
     return jsonify(response_body), 200
