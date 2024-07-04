@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 import os
 from flask import Flask, request, jsonify, url_for
 from flask_migrate import Migrate
-from flask_swagger_ui import get_swaggerui_blueprint
+from flask_swagger import get_swaggerui_blueprint
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
@@ -31,10 +31,12 @@ setup_admin(app)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
+
 # generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
 
 @app.route('/people', methods=['GET'])
 def get_people():
@@ -59,7 +61,6 @@ def get_people_by_id(people_id):
     }
 
     return jsonify(response_body), 200
-
 
 
 @app.route('/planets', methods=['GET'])
@@ -99,7 +100,7 @@ def get_users():
     return jsonify(response_body), 200
 
 
-@app.route('/user/<int:user_id>favorites', methods=['GET'])
+@app.route('/user/<int:user_id>favorites>', methods=['GET'])
 def get_user_favorites(user_id):
     user = user.query.get(user_id)
     if not user:
@@ -132,7 +133,95 @@ def create_user():
      }
     return jsonify(response_body), 200
     
-                
+
+@app.route('/favorite/planet/<int:planet_id>' , methods =['POST'])
+def add_favorite_planet(planet_id):
+    user_id = request.headers.get('user_id')
+    user= user.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    planet = planet.query.get(planet_id)
+
+    if not planet:
+        return jsonify({'error': 'Planet not found'}), 404
+    
+    if planet in user.favorite_planets:
+        return jsonify ({'error': 'planet is in the list of favorites'})
+    
+    user.favorite_planets.append(planet)
+    db.session.commit()
+
+    
+    return jsonify({'message': f'The planet {planet.name} has been added to {user.username} favorites list'}), 200    
+
+
+@app.route('/favorite/people/<int:person_id>' , methods =['POST'])
+def add_favorite_person(person_id):
+    user_id = request.headers.get('user_id')
+    user= user.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    person = person.query.get(person_id)
+
+    if not person:
+        return jsonify({'error': 'Person not found'}), 404
+    
+    if person in user.favorite_people:
+        return jsonify ({'error': 'person is in the list of favorites'})
+    
+    user.favorite_people.append(person)
+    db.session.commit()
+
+    
+    return jsonify({'msg': f' The character {person.name} has been added to {user.username} favorites list'}), 200    
+
+
+@app.route('/favorite/planet/<int:planet_id>' , methods =['DELETE'])
+def delete_favorite_planet(planet_id):
+    user_id = request.headers.get('user_id')
+    user= user.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    planet = planet.query.get(planet_id)
+
+    if not planet:
+        return jsonify({'error': 'Planet not found'}), 404
+    
+    if planet in user.favorite_planets:
+            user.favorite_planets.pop(planet_id)
+            db.session.commit()
+    else:
+            jsonify ({'error': 'planet is not in the list of favorites'})
+        
+    
+    return jsonify({'msg': f'The planet {planet.name} has been removed from {user.username} favorites list.'}), 200  
+
+
+@app.route('/favorite/person/<int:people_id>' , methods =['DELETE'])
+def delete_favorite_person(person_id):
+    user_id = request.headers.get('user_id')
+    user= user.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    person = person.query.get(person_id)
+
+    if not person:
+        return jsonify({'error': 'Person not found'}), 404
+    
+    if person in user.favorite_people:
+            user.favorite_people.pop(person_id)
+            db.session.commit()
+    else:
+            jsonify ({'error': 'person is not in the list of favorites'})
+        
+    
+    return jsonify({'msg': f'The character {person.name} has been removed from {user.username} favorites list.'}), 200    
+
+
 
 
         
